@@ -1,0 +1,49 @@
+name: Build and Release EXE
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # 仅在推送标签时触发工作流
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'  # 根据您的项目需要选择Python版本
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller tkinter
+
+      - name: Build EXE
+        run: |
+          pyinstaller --onefile find_duplicates.py  # 移除了 --noconsole
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/repeat.exe  # 替换为生成的exe文件名
+          asset_name: repeat.exe  # 替换为生成的exe文件名
+          asset_content_type: application/octet-stream

@@ -1,7 +1,8 @@
+import tkinter as tk
+from tkinter import filedialog
 import os
 import hashlib
 import shutil
-import argparse
 from collections import defaultdict
 from datetime import datetime
 
@@ -91,14 +92,33 @@ def main(source_dir, target_dir):
     print(f"找到 {total_duplicates} 个重复文件。")
     move_duplicates(duplicates, target_dir)
 
+def gui_main():
+    root = tk.Tk()
+    root.title("重复文件查找器")
+
+    source_var = tk.StringVar()
+    target_var = tk.StringVar()
+
+    tk.Label(root, text="源文件夹:").grid(row=0, column=0, sticky="e")
+    tk.Entry(root, textvariable=source_var, width=50).grid(row=0, column=1)
+    tk.Button(root, text="浏览", command=lambda: source_var.set(filedialog.askdirectory())).grid(row=0, column=2)
+
+    tk.Label(root, text="目标文件夹:").grid(row=1, column=0, sticky="e")
+    tk.Entry(root, textvariable=target_var, width=50).grid(row=1, column=1)
+    tk.Button(root, text="浏览", command=lambda: target_var.set(filedialog.askdirectory())).grid(row=1, column=2)
+
+    def start_process():
+        source_dir = source_var.get()
+        target_dir = target_var.get()
+        if source_dir and target_dir:
+            root.destroy()
+            main(source_dir, target_dir)
+        else:
+            tk.messagebox.showerror("错误", "请选择源文件夹和目标文件夹")
+
+    tk.Button(root, text="开始处理", command=start_process).grid(row=2, column=1)
+
+    root.mainloop()
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="查找并移动重复文件")
-    parser.add_argument("source", help="要扫描的源文件夹路径")
-    parser.add_argument("target", help="重复文件的目标文件夹路径")
-    
-    args = parser.parse_args()
-    
-    source_dir = os.path.abspath(args.source)
-    target_dir = os.path.abspath(args.target)
-    
-    main(source_dir, target_dir)
+    gui_main()
